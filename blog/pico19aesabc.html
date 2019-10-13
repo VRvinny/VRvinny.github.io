@@ -16,14 +16,10 @@
 
     p {
       font-size: 1.3em;
-      /* max-width: 60%; */
-      /* text-align: left; */
       margin: auto;
       padding-top: 1em;
       padding-bottom: 1em;
-      /* padding-left: 2em; */
-      /* text-align: center; */
-      /* display:inline-block; */
+
     }
 
     img {
@@ -69,7 +65,7 @@
     <div class="row">
       <h2 class="three columns">Solution</h2>
       <p>
-        This challenge was the lowest one I had solved, it had around ~280 solves when I solved it. Surprisingly it wasn't that hard to solve, just needed some knowledge of block cipher modes. With that, let's get started.
+        This challenge was the lowest one I had solved and the final of the crypto problems I had left, it had around ~280 solves when I solved it. Surprisingly it wasn't that hard to solve, just needed some knowledge of block cipher modes. With that, let's get started.
       </p>
       <p>
         AES makes use of block ciphers which break the data into blocks and encrypts then with some sort of patterned method. The easiest of the mode of operation, AES-EBC (Electronic Codebook), simply takes each plaintext block and then encrypts them as shown
@@ -122,8 +118,8 @@
           </code>
           </pre>
       <p>
-        Keen eyes may be able to spot a combination of EBC and then Cipher Block Cipher (CBC) being used. The CBC is used with addition modulo UMAX instead of the regular XOR when chaining the blocks together. Since modulo arithmetic is being used, a reversible
-        operation (we don't care about overflow/losing precision in this problem), we can easily reversed the process to go "back" to ECB. A formula on the Wikipedia succintly summarises this well: \[P_0 = D_k (C_0) \oplus IV \] \[P_i = D_k(C_i) \oplus
+        Keen eyes may be able to spot a combination of EBC and then Cipher Block Cipher (CBC) being used. The CBC mode is used with addition modulo UMAX instead of the regular XOR when chaining the blocks together. Since modulo arithmetic is being used, a reversible
+        operation (we don't care about overflow/losing precision in this problem), we can easily reversed the process to go "back" to ECB. A formula on the Wikipedia page succintly summarises this well: \[P_0 = D_k (C_0) \oplus IV \] \[P_i = D_k(C_i) \oplus
         C_{i-1} \] Or if you prefer a diagram:
       </p>
       <img class="u-max-full-width" src="imgs/cbc_dec.png">
