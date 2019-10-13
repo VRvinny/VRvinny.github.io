@@ -1,35 +1,182 @@
-<html> 
- 
-<head> 
-  <meta charset="utf-8" /> 
-  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet"> 
-  <link rel="stylesheet" type="text/css" href="css/style.css"> 
-  <link rel="stylesheet" type="text/css" href="css/normalize.css"> 
-  <link rel="stylesheet" type="text/css" href="css/skeleton.css"> 
-  <!-- <link rel="stylesheet" href="css/projects.css"> --> 
-  <style> 
-    * { 
-      font-family: "Roboto", sans-serif; 
-      color: #FFFFFF; 
-      text-align: center 
-    } 
- 
-    body { 
-      background-color: #1A222C; 
-    } 
- 
-  </style> 
-</head> 
- 
-<body> 
-  <div class="text-bar" style="display: flex; justify-content: flex-end"> 
-  <a href="index.html">Home</a> 
-  <a href="projects.html">Projects</a> 
-  <a href="blog/blog.html">Blog</a> 
-  </div> 
- 
- 
-</body> 
- 
-</html> 
- 
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+      /* text-align: center; */
+    }
+
+    p {
+      font-size: 1.3em;
+      /* max-width: 60%; */
+      /* text-align: left; */
+      margin: auto;
+      padding-top: 1em;
+      padding-bottom: 1em;
+      /* padding-left: 2em; */
+      /* text-align: center; */
+      /* display:inline-block; */
+    }
+
+    img {
+      margin-left: 0em;
+      margin-top: 1.5em;
+      margin-bottom: 1.5em;
+      white-space: nowrap;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js">
+  </script>
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="blog/blog.html">Blog</a>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <h1> PicoCTF 2019: Crypto - AES-ABC </h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns"> Problem </h2>
+      <p class "three columns">AES-ECB is bad, so I rolled my own cipher block chaining mechanism - Addition Block Chaining! You can find the source here: aes-abc.py. The AES-ABC flag is body.enc.ppm </p>
+    </div>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns">Solution</h2>
+      <p>
+        This challenge was the lowest one I had solved, it had around ~280 solves when I solved it. Surprisingly it wasn't that hard to solve, just needed some knowledge of block cipher modes. With that, let's get started.
+      </p>
+      <p>
+        AES makes use of block ciphers which break the data into blocks and encrypts then with some sort of patterned method. The easiest of the mode of operation, AES-EBC (Electronic Codebook), simply takes each plaintext block and then encrypts them as shown
+        below (and on <a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_Codebook_(ECB)">Wikipedia</a>):
+      </p>
+      <img class="u-max-full-width" src="imgs/ecb_enc.png">
+      <p>
+        Note that EBC doesn't work well with images in general since a lack of a Initialisation Value (IV), a key and not being to chain cipher blocks together mean that repeated blocks of the same colour will get mapped to the same cipher block. This is bad
+        since the main purpose of cipher texts are about not leaking any useful information. A good example is the Linux mascot, Tux.
+      </p>
+      <img class="u-max-full-width" src="imgs/ecb_bad.png">
+
+      <p>
+        In the code given to us:
+      </p>
+
+      <pre>
+          <code>
+            def aes_abc_encrypt(pt):
+                KEY="1234567890123456"
+
+                # ECB occurs here
+
+                cipher = AES.new(KEY, AES.MODE_ECB)
+                ct = cipher.encrypt(pad(pt))
+
+                #split cipher into blocks
+                blocks = [ct[i * BLOCK_SIZE:(i+1) * BLOCK_SIZE] for i in range(len(ct) / BLOCK_SIZE)]
+
+                #16 random bytes
+                iv = os.urandom(16)
+
+                #insert iv into start
+                blocks.insert(0, iv)
+
+                # 0-291358 blocks
+                for i in range(len(blocks) - 1):
+                    #numbers in decimal
+                    prev_blk = int(blocks[i].encode('hex'), 16)
+                    curr_blk = int(blocks[i+1].encode('hex'), 16)
+
+                    # CBC occurs here
+                    n_curr_blk = (prev_blk + curr_blk) % UMAX
+                    blocks[i+1] = to_bytes(n_curr_blk)
+
+                #completed cipher text
+                ct_abc = "".join(blocks)
+
+                return iv, ct_abc, ct
+          </code>
+          </pre>
+      <p>
+        Keen eyes may be able to spot a combination of EBC and then Cipher Block Cipher (CBC) being used. The CBC is used with addition modulo UMAX instead of the regular XOR when chaining the blocks together. Since modulo arithmetic is being used, a reversible
+        operation (we don't care about overflow/losing precision in this problem), we can easily reversed the process to go "back" to ECB. A formula on the Wikipedia succintly summarises this well: \[P_0 = D_k (C_0) \oplus IV \] \[P_i = D_k(C_i) \oplus
+        C_{i-1} \] Or if you prefer a diagram:
+      </p>
+      <img class="u-max-full-width" src="imgs/cbc_dec.png">
+      <p>
+        With that, we can start writing some code to reverse the encryption.
+      </p>
+      <pre>
+        <code>
+          def aes_abc_decrypt(ct):
+    #split data into blocks
+    blocks = [ct[i * BLOCK_SIZE:(i+1) * BLOCK_SIZE] for i in range(len(ct) / BLOCK_SIZE)]
+
+    n = len(blocks) - 2
+    for i in range(len(blocks) - 1):
+        #calc to perform
+        #blocks[n - i] = blocks[n - i] - blocks[n - i - 1]
+
+        prev_blk = int(blocks[n-i-1].encode('hex'), 16)
+        curr_blk = int(blocks[n-i].encode('hex'), 16)
+
+        n_curr_blk = (curr_blk - prev_blk) % UMAX
+
+        blocks[n-i] = to_bytes(n_curr_blk)
+
+    ecb = "".join(blocks)
+    iv = blocks[0]
+
+    return iv, ecb
+
+        </code>
+        </pre>
+        And to put it all together, define a function to write the image and call it:
+        <pre>
+        <code>
+          def decrypt():
+              with open('body.enc.ppm', 'rb') as f:
+                  header, data = parse_header_ppm(f)
+
+              iv, c_img = aes_abc_decrypt(data)
+
+              with open('answer.ppm', 'wb') as fw:
+                  fw.write(header)
+                  fw.write(c_img)
+
+        </code>
+        </pre>
+        This results in the following image in ECB mode:
+              <img class="u-max-full-width" src="imgs/answer.png">
+            <pre><code>picoCTF{d0Nt_r0ll_yoUr_0wN_aES}</code></pre>
+    </div>
+  </div>
+
+
+</body>
+
+</html>
