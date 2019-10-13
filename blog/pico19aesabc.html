@@ -155,8 +155,8 @@
 
         </code>
         </pre>
-        And to put it all together, define a function to write the image and call it:
-        <pre>
+        <p>And to put it all together, define a function to write the image and call it: </p>
+      <pre>
         <code>
           def decrypt():
               with open('body.enc.ppm', 'rb') as f:
@@ -167,12 +167,13 @@
               with open('answer.ppm', 'wb') as fw:
                   fw.write(header)
                   fw.write(c_img)
-
         </code>
         </pre>
-        This results in the following image in ECB mode:
-              <img class="u-max-full-width" src="imgs/answer.png">
-            <pre><code>picoCTF{d0Nt_r0ll_yoUr_0wN_aES}</code></pre>
+
+      <p>  This results in the following image in ECB mode: </p>
+
+      <img class="u-max-full-width" src="imgs/answer.png">
+      <pre><code>picoCTF{d0Nt_r0ll_yoUr_0wN_aES}</code></pre>
     </div>
   </div>
 
