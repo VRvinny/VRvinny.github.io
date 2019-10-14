@@ -1,0 +1,157 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+      /* text-align: center; */
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bottom: 1em;
+
+    }
+
+    img {
+      margin-left: 0em;
+      margin-top: 1.5em;
+      margin-bottom: 1.5em;
+      white-space: nowrap;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="blog/blog.html">Blog</a>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h1> PicoCTF 2019: Reverse Engineering - Need For Speed </h1>
+    </div>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns"> Problem </h2>
+      <p class "three columns">The name of the game is speed. Are you quick enough to solve this problem and keep it above 50 mph? <a href="https://2019shell1.picoctf.com/static/c7c298e4562011da458a1b386eb61f71/need-for-speed">Binary</a> </p>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns">Solution</h2>
+      <p>
+        I'd like to do think that my solution for this problem was elegant and different, hence the reason for me writing this.
+      </p>
+      <p>
+        In the problem we're given a binary, which when run, quits after about a second. Using <code>$ objdump -d</code> returns the following assembly:
+      </p>
+      <pre>
+        <code>
+          0000000000000974 &ltmain&gt:
+ 974:	55                   	push   %rbp
+ 975:	48 89 e5             	mov    %rsp,%rbp
+ 978:	48 83 ec 10          	sub    $0x10,%rsp
+ 97c:	89 7d fc             	mov    %edi,-0x4(%rbp)
+ 97f:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+ 983:	b8 00 00 00 00       	mov    $0x0,%eax
+ 988:	e8 a5 ff ff ff       	callq  932 &ltheader&gt
+ 98d:	b8 00 00 00 00       	mov    $0x0,%eax
+ 992:	e8 e8 fe ff ff       	callq  87f &ltset_timer&gt
+ 997:	b8 00 00 00 00       	mov    $0x0,%eax
+ 99c:	e8 36 ff ff ff       	callq  8d7 &ltget_key&gt
+ 9a1:	b8 00 00 00 00       	mov    $0x0,%eax
+ 9a6:	e8 5b ff ff ff       	callq  906 &ltprint_flag&gt
+ 9ab:	b8 00 00 00 00       	mov    $0x0,%eax
+ 9b0:	c9                   	leaveq
+ 9b1:	c3                   	retq
+ 9b2:	66 2e 0f 1f 84 00 00 	nopw   %cs:0x0(%rax,%rax,1)
+ 9b9:	00 00 00
+ 9bc:	0f 1f 40 00          	nopl   0x0(%rax)
+        </code>
+      </pre>
+
+      <p>
+        So in the main function, the <code>set_timer</code> function is called. This function essentially just kills the program a second after running.
+      </p>
+      <p>
+        It would be certainly nice if this particular function simply would just not run right? Well let's do that.
+      </p>
+      <p>
+        Start off by opening the binary in a hex editor. I'll be using vim with <code>:%!xxd</code> to show everything in hex. Using the above code block as reference we can remove the 5 bytes of assembly at 0x992. We can then replace the removed instruction
+        with NOPs, No Operations, which have a value of 0x90.
+      </p>
+
+      <pre>
+        <code>
+          0000000000000974 &ltmain&gt:
+ 974:	55                   	push   %rbp
+ 975:	48 89 e5             	mov    %rsp,%rbp
+ 978:	48 83 ec 10          	sub    $0x10,%rsp
+ 97c:	89 7d fc             	mov    %edi,-0x4(%rbp)
+ 97f:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+ 983:	b8 00 00 00 00       	mov    $0x0,%eax
+ 988:	e8 a5 ff ff ff       	callq  932 &ltheader&gt
+ 98d:	b8 00 00 00 00       	mov    $0x0,%eax
+ 992:	90 90 90 90 90       	callq  87f &ltset_timer&gt
+ 997:	b8 00 00 00 00       	mov    $0x0,%eax
+ 99c:	e8 36 ff ff ff       	callq  8d7 &ltget_key&gt
+ 9a1:	b8 00 00 00 00       	mov    $0x0,%eax
+ 9a6:	e8 5b ff ff ff       	callq  906 &ltprint_flag&gt
+ 9ab:	b8 00 00 00 00       	mov    $0x0,%eax
+ 9b0:	c9                   	leaveq
+ 9b1:	c3                   	retq
+ 9b2:	66 2e 0f 1f 84 00 00 	nopw   %cs:0x0(%rax,%rax,1)
+ 9b9:	00 00 00
+ 9bc:	0f 1f 40 00          	nopl   0x0(%rax)
+
+</code>
+        </pre>
+
+        <p> Once that's done, we can save the modified binary with <code>:%!xxd -r</code> and then run it!
+        </p>
+        <pre>
+          <code>
+me:~/Documents/ctf/pico/2019/needforspeed ./need-for-speed
+Keep this thing over 50 mph!
+============================
+
+Creating key...
+Finished
+Printing flag:
+PICOCTF{Good job keeping bus #0b812872 speeding along!}
+          </code>
+          </pre>
+
+
+    </div>
+  </div>
+
+
+
+
+</body>
+
+</html>
