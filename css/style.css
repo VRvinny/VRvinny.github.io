@@ -48,6 +48,26 @@
     transform: translateX(-132px) translateY(150%);
   }
 
+  .badges {
+    /* font-size: 5em; */
+    /* text-align: center; */
+    display: flex;
+    justify-content: center;
+    position: absolute;
+
+    /* padding: 0.5em 3.5em; */
+    top: 50%;
+    right: 50%;
+    /* position: absolute; */
+    /* flex: 0 0 auto; */
+    /* margin-left: 100px; */
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    /* transform: translateX(-35%) translateY(550%); */
+    transform: translateX(50%) translateY(120%);
+}
+
+
   .icons a {
     /* width: 40%; */
     padding-left: 5px;
@@ -76,7 +96,8 @@
     font-size: 28px;
     text-decoration: none;
     transition: all 0.3s ease;
-    outline: none
+    outline: none;
+    color: #FFFFFF;
   }
 
   .text-bar a:hover {
