@@ -55,8 +55,9 @@
   <div class="container">
     <div class="row">
       <!-- <h2 class="three columns">  </h2> -->
-      <p class "three columns"> Here's a place to store my notes/commands because I keep on forgetting things which I use often but not enough to memorise it. I'll add more to this as I learn more cool things. </p>
+      <p class "three columns"> Here's a place to store my notes/commands which I keep on forgetting because I never use them enough to memorise it. Sometimes the man pages are just too verbose and too long to look through :( </p>
       <p>Might move it to a self-hosted wiki in the future, who knows?</p>
+      <p> I could probably improve the look of this page but that'll probably happen soon. </p>
     </div>
   </div>
 
@@ -64,12 +65,20 @@
     <div class="row">
       <h2 class="five columns">General stuff</h2>
     </div>
+    <!-- <div class="row">
+      <h3 text-align="center">Networking stuff</h3>
+    </div> -->
     <div>
       <p> Login with an SSH private key with <code> ssh -i sshPrivateKey user@8.8.8.8</code> </p>
       <p> File transfer when ssh'd into a server <code> scp fileName username@hostname:~/Location </code> </p>
+      <p> Find any files without the "Permission Denied" error occuring. <code>find / -type f -name "fileName" 2>&1 | grep -v -i "permission denied" </code> </p>
+      <p> Works by redirecting STDERR (2) to STDOUT (1) </p>
     </div>
 
+  </div>
 
+
+  <div class="container">
     <div class="row">
       <h2 class="five columns">Audio/Visual</h2>
       <!-- <p> -->
@@ -88,50 +97,101 @@
         </code>
       </p>
       <p> Remember to switch audio output with Pavucontrol.</p>
-      <div>
-      <div class="row">
-        <h2 class="five columns">Password Cracking</h2>
-      </div>
 
-      <div class="row">
-      <div class="row">
-        <h4 class="two columns">Hashcat</h4>
-      </div>
-      <!--  add div tag here?-->
+    </div>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="five columns"> CTF stuff</h2>
+    </div>
+    <div class="row">
+      <h3 text-align="center">Crypto <3 </h3> </div> <div>
+          <p>Follow these links to factor super duper large numbers, <a href="factordb.com">here</a>, and <a href="https://www.alpertron.com.ar/ECM.HTM"> here</a> </p>
+          <p>Also Yafu deserves a good mention here, will update on how to use it when I next use it. </p>
+    </div>
+
+    <div class="row">
+      <h3 text-align="center">Steganography</h3>
+    </div>
+
+    <div>
+      <p> Simple enough to use: <code> binwalk -e fileName</code>; <code> steghide --extract -sf fileName </code>; <code> foremost fileName</code> </p>
+      <p> <code>zsteg fileName </code>; <code>exiftool fileName </code>; </p>
+    </div>
+
+    <div class="row">
+      <h3 text-align="center">Reverse Engineering</h3>
+    </div>
+
+    <div>
+      <p> Use <code> objdump -d binaryName</code> to disassemble the binary into assembly instructions. </p>
+      <p> Use <code> objdump -t binaryName</code> to print out the symbols (also function names). </p>
+      <p> Use <code> strace -s 64 </code> and <code> ltrace -s 64</code> to look at system and library calls. Or do both with <code> ltrace -S</code>. </p>
+    </div>
+
+    <div class="row">
+      <h3 text-align="center">Enumeration/OSINT</h3>
+    </div>
+
+    <div class="row">
+      <h4 text-align="center">Nmap</h4>
+    </div>
+    <div>
       <p>
-        The different attack modes are:
-        <ul>
-          <li> <code>-a = 0</code>: Dictionary mode
-          <li> <code>-a = 1</code>: Combination mode, uses two dictionaries
-          <li> <code>-a = 4</code>: Mask mode, brute force with a given character set
-          <li> <code>-a = 6</code>: Hybrid mode, dictionaries with masks
-        </ul>
-      </p>
-      <p>
-        There's a lot of hashes out there, <a href="https://hashcat.net/wiki/doku.php?id=example_hashes">here</a> are all of them.
-      </p>
-      <p>
-        An plain standard command is:
-        <pre> <code>
+    </div>
+
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="five columns">Password Cracking</h2>
+    </div>
+
+
+
+    <div class="row">
+      <h3 text-align="center">Hashcat</h3>
+    </div>
+    <!--  add div tag here?-->
+    <p>
+      The different attack modes are:
+      <ul>
+        <li> <code>-a = 0</code>: Dictionary mode
+        <li> <code>-a = 1</code>: Combination mode, uses two dictionaries
+        <li> <code>-a = 4</code>: Mask mode, brute force with a given character set
+        <li> <code>-a = 6</code>: Hybrid mode, dictionaries with masks
+      </ul>
+    </p>
+    <p>
+      There's a lot of hashes out there, <a href="https://hashcat.net/wiki/doku.php?id=example_hashes">here</a> are all of them.
+    </p>
+    <p>
+      An plain standard command is:
+      <pre> <code>
             # dictionary mode with a SHA512 hash and rockyou.txt
             <br>
             ./hashcat -a 0 -m 1800 exampleHash.txt /usr/share/dict/rockyou.txt
           </code></pre>
-          Below is one example of mask mode being used, <a href="https://hashcat.net/wiki/doku.php?id=mask_attack"> here </a> are more.
-        <pre> <code>
+      Below is one example of mask mode being used, <a href="https://hashcat.net/wiki/doku.php?id=mask_attack"> here </a> are more.
+      <pre> <code>
             # mask mode with a bcrypt/blowfish hash with a prehash in regex form [A-Z0-9]{4}
             <br>
             ./hashcat -a 3 -m 3200 exampleHash.txt -1 ?l?d?u ?1?1?1?1
           </code></pre>
 
-      </p>
-    </div>
+    </p>
+
     <!--  end here ?-->
 
 
     <div class="row">
       <div class="row">
-        <h4 class="two columns">JohnTheRipper</h4>
+        <h3 text-align="center">JohnTheRipper</h3>
       </div>
       <p> Use the relevant binary such as <code>./unshadow</code>,<code>./ssh2john</code> <code>./zip2john</code> to get the relevant hash and store it in some file. Then use JTR with:
         <pre> <code>
@@ -139,10 +199,9 @@
 </code> </pre>
       </p>
 
-
-
     </div>
   </div>
+
 
 </body>
 
