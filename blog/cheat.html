@@ -55,7 +55,7 @@
   <div class="container">
     <div class="row">
       <!-- <h2 class="three columns">  </h2> -->
-      <p class "three columns"> Here's a place to store my notes/commands which I keep on forgetting because I never use them enough to memorise it. Sometimes the man pages are just too verbose and too long to look through :( </p>
+      <p> Here's a place to store my notes/commands which I keep on forgetting because I never use them enough to memorise it. Sometimes the man pages are just too verbose and too long to look through :( </p>
       <p>Might move it to a self-hosted wiki in the future, who knows?</p>
       <p> I could probably improve the look of this page but that'll probably happen soon. </p>
     </div>
@@ -118,8 +118,8 @@
     </div>
 
     <div>
-      <p> Simple enough to use: <code> binwalk -e fileName</code>; <code> steghide --extract -sf fileName </code>; <code> foremost fileName</code> </p>
-      <p> <code>zsteg fileName </code>; <code>exiftool fileName </code>; </p>
+      <p> Simple enough to use: <code> binwalk -e fileName</code>; <code> steghide --extract -sf fileName</code>; <code> foremost fileName</code>; </p>
+      <p> <code>zsteg fileName</code>; <code>exiftool fileName</code>; </p>
     </div>
 
     <div class="row">
@@ -139,68 +139,80 @@
     <div class="row">
       <h4 text-align="center">Nmap</h4>
     </div>
-    <div>
-      <p>
-    </div>
-
-  </div>
-
-
-
-  <div class="container">
     <div class="row">
-      <h2 class="five columns">Password Cracking</h2>
-    </div>
-
-
-
-    <div class="row">
-      <h3 text-align="center">Hashcat</h3>
-    </div>
-    <!--  add div tag here?-->
-    <p>
-      The different attack modes are:
-      <ul>
-        <li> <code>-a = 0</code>: Dictionary mode
-        <li> <code>-a = 1</code>: Combination mode, uses two dictionaries
-        <li> <code>-a = 4</code>: Mask mode, brute force with a given character set
-        <li> <code>-a = 6</code>: Hybrid mode, dictionaries with masks
-      </ul>
-    </p>
-    <p>
-      There's a lot of hashes out there, <a href="https://hashcat.net/wiki/doku.php?id=example_hashes">here</a> are all of them.
-    </p>
-    <p>
-      An plain standard command is:
-      <pre> <code>
-            # dictionary mode with a SHA512 hash and rockyou.txt
-            <br>
-            ./hashcat -a 0 -m 1800 exampleHash.txt /usr/share/dict/rockyou.txt
-          </code></pre>
-      Below is one example of mask mode being used, <a href="https://hashcat.net/wiki/doku.php?id=mask_attack"> here </a> are more.
-      <pre> <code>
-            # mask mode with a bcrypt/blowfish hash with a prehash in regex form [A-Z0-9]{4}
-            <br>
-            ./hashcat -a 3 -m 3200 exampleHash.txt -1 ?l?d?u ?1?1?1?1
-          </code></pre>
-
-    </p>
-
-    <!--  end here ?-->
-
-
-    <div class="row">
-      <div class="row">
-        <h3 text-align="center">JohnTheRipper</h3>
-      </div>
-      <p> Use the relevant binary such as <code>./unshadow</code>,<code>./ssh2john</code> <code>./zip2john</code> to get the relevant hash and store it in some file. Then use JTR with:
-        <pre> <code>
-./john --wordlist=/usr/share/dict/rockyou.txt exampleHash.txt
-</code> </pre>
+      <p> <code> nmap -sV -sC -vv ipAddr</code> where the arguments represent:
+        <ul>
+          <li> <code>-sV</code> for version detection;
+          <li> <code>-sC</code> to use the default set of scripts;
+          <li> <code>-vv</code> for verbose output.
+        </ul>
       </p>
 
     </div>
+
+    <div class = "row">
+      <h4 text-align="center">OSINT</h4>
+    </div>
+    <div class="row">
+    <p>Probably the only link apart that will be useful apart from Google: <a href ="https://osintframework.com">OSINT framework</a></p>
   </div>
+
+      <div class="row">
+        <h3 text-align="center">Password Cracking</h3>
+      </div>
+
+
+
+      <div class="row">
+        <h4 text-align="center">Hashcat</h4>
+      </div>
+      <p>
+        The different attack modes are:
+        <ul>
+          <li> <code>-a = 0</code>: Dictionary mode
+          <li> <code>-a = 1</code>: Combination mode, uses two dictionaries
+          <li> <code>-a = 4</code>: Mask mode, brute force with a given character set
+          <li> <code>-a = 6</code>: Hybrid mode, dictionaries with masks
+        </ul>
+      </p>
+      <p>
+        There's a lot of hashes out there, <a href="https://hashcat.net/wiki/doku.php?id=example_hashes">here</a> are all of them.
+      </p>
+      <p>
+        An plain standard command is:
+        <pre> <code>
+              # dictionary mode with a SHA512 hash and rockyou.txt
+              <br>
+              ./hashcat -a 0 -m 1800 exampleHash.txt /usr/share/dict/rockyou.txt
+            </code></pre>
+        Below is one example of mask mode being used, <a href="https://hashcat.net/wiki/doku.php?id=mask_attack"> here </a> are more.
+        <pre> <code>
+              # mask mode with a bcrypt/blowfish hash with a prehash in regex form [A-Z0-9]{4}
+              <br>
+              ./hashcat -a 3 -m 3200 exampleHash.txt -1 ?l?d?u ?1?1?1?1
+            </code></pre>
+
+      </p>
+
+      <!--  end here ?-->
+
+
+      <div class="row">
+        <div class="row">
+          <h4 text-align="center">JohnTheRipper</h4>
+        </div>
+        <p> Use the relevant binary such as <code>./unshadow</code>,<code>./ssh2john</code> <code>./zip2john</code> to get the relevant hash and store it in some file. Then use JTR with:
+          <pre> <code>
+  ./john --wordlist=/usr/share/dict/rockyou.txt exampleHash.txt
+  </code> </pre>
+        </p>
+
+      </div>
+  </div>
+
+
+
+
 
 
 </body>
