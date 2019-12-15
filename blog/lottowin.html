@@ -1,0 +1,216 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+      /* text-align: center */
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      padding-top: 1em;
+      padding-bottom: 1em;
+
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="blog.html">Blog</a>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h1> TheManyHatsClub CTF: Lotto_win </h1>
+    </div>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns"> Problem </h2>
+      <p class="six columns">Predict the next numbers and you win BIG TIME!</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns">Solution</h2>
+      <p class="eight columns">
+        I found about this CTF from the amazing people on Twitter. Overall it was a pretty fun CTF with interesting challenges which made me think more than usual! I ended up around 13th out of 173 teams, not bad for playing solo.
+        This is a write up for the Lotto_win challenge, a crypto problem. Can you tell I love crypto?
+      </p>
+      <p class="six columns">
+        Given the link and port for the challenge, connect to the service with <code>nc</code>. Upon connecting, I got this wall of text:
+      </p>
+
+    </div>
+    <pre>
+        <code>
+          Trust in Lotto-Win. Trust in open source:
+          def next(seed):
+          	# Max winner number
+          	MAX = 2000000000
+          	# Min winner number
+          	MIN = 1
+
+          	# Change of the seed
+          	seed = seed * seed + seed
+
+          	# Truncation of the seed
+          	if (seed > 0xFFFFFFFF):
+          		seed = int(hex(seed)[-8:], 16)
+
+          	# Return of [new seed, new winner number]
+          	return [seed, seed % (MAX - MIN) + MIN]
+
+          # Initialization of random seed
+          seed = random.randint(0x1337, 0xFFFFFFFF)
+
+
+
+          Last Lottery numbers:
+          1420164716
+          1170149968
+          1182290452
+          348536663
+          373562428
+          Wait 5 minutes to play the next round of lottery...
+          Enter your lottery number:
+        </code>
+      </pre>
+    <p>
+      Seems to me that in order to solve this challenge, we have to find out of what the seed is.
+      This is because if we can figure out what the seed is, we can derive all the future lottery numbers.
+    </p>
+    <p>
+      The most vulnerable point in the program is giving us the previous lottery numbers and reusing the seed to generate the lottery numbers.
+    </p>
+    <p>
+      In cryptography a secure number is a number thousands of digits long, not 8 digits long.
+    </p>
+    <p>
+      Knowing this, we can brute force values for the seed.
+      We know that the lottery number is calculated by
+      <code>seed % (MAX - MIN) + MIN </code> where % is the modulus operator.
+      If we look at the set of values that the lottery number can take, <code>[0,MAX - MIN] </code>, as well as the set of values that the seed can take (after initialisation), <code>[0, 0xFFFFFFFF]</code>, there's only a finite possible number of
+      combinations to calculate the seed from the lottery.
+      This is what we exploit.
+    </p>
+
+    <pre>
+        <code>
+    def calcSeed():
+      1stLotteryNo = 1420164716
+      2ndLotteryNo = 1170149968
+      for i in range(10000):
+         # strategically guess the value of the seed
+         seed = 1stLotteryNo - MIN + i*(MAX-MIN)
+
+         # copy the code from the next function to go through
+         # one iteration of getting the next seed value
+
+         # Change of the seed
+         seed = seed * seed + seed
+     	   # Truncation of the seed
+         if (seed > 0xFFFFFFFF):
+             seed = int(hex(seed)[-8:], 16)
+
+         # our guess is correct if we can identify the next lottery number
+         # which is given to us
+         if (seed % (MAX - MIN) + MIN) == 2ndLotteryNo:
+             print(i)
+
+        </code>
+      </pre>
+    <p>
+      As from the code, the code snippet attempts to guess the value of the seed by adding on multiples of <code>MAX-MIN</code> to the lottery number.
+      Then we verify the seed is correct by calculating the next iteration of the seed and calculating the next lottery number.
+      If our calculated lottery number is the same as the next lottery number given to us on the service then jackpot.
+    </p>
+    <p>
+      Running the script multiple times on different sets of numbers, I found out that <code>seed = LotteryNo - MIN + 1*(MAX-MIN) </code> and <code>i=1</code> always.
+    </p>
+
+    <p>
+      With this knowledge we can generate all future lottery winners! Below is a snippet which does so:
+    </p>
+    <pre>
+        <code>
+          oldWinner = 1420164716
+          seed = oldWinner - MIN + (MAX - MIN)
+          for j in range(1000):
+            winner = next(seed)
+            seed = winner[0]
+            print(winner[1])
+        </code>
+      </pre>
+    <p>
+      Now we can connect to the service and enter the new lottery number.
+      I redid the challenge again with new numbers just to show you guys:
+    </p>
+
+    <pre>
+<code>
+ me:~ nc docker.hackthebox.eu 30341
+  Trust in Lotto-Win. Trust in open source:
+  def next(seed):
+  	# Max winner number
+  	MAX = 2000000000
+  	# Min winner number
+  	MIN = 1
+
+  	# Change of the seed
+  	seed = seed * seed + seed
+
+  	# Truncation of the seed
+  	if (seed > 0xFFFFFFFF):
+  		seed = int(hex(seed)[-8:], 16)
+
+  	# Return of [new seed, new winner number]
+  	return [seed, seed % (MAX - MIN) + MIN]
+
+  # Initialization of random seed
+  seed = random.randint(0x1337, 0xFFFFFFFF)
+
+
+
+  Last Lottery numbers:
+  1528475124
+  579668663
+  1199293467
+  1132069568
+  1127664579
+  Wait 5 minutes to play the next round of lottery...
+  Enter your lottery number: 1731988167
+  WOW! YOU WON THE LOTTERY!! GET YOUR REWARD WITH THE CODE 'TMHC{Lucki3rXXXXXXXX}'!!!1!11!
+</code>
+</pre>
+
+  </div>
+
+
+
+
+</body>
+
+
+</html>
