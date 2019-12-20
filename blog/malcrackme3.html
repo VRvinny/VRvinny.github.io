@@ -1,0 +1,276 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bocodeom: 1em;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+
+    .caption {
+      text-align: center
+    }
+
+    img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 50%;
+    }
+  </style>
+  <!--  Use LaTeX in html -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\\(', '\\)']
+        ]
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="blog/blog.html">Blog</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h1> My First Crackme (Part 3)</h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns"> Ex3_2 </h2>
+      <!-- <p class "three columns">Description </p> -->
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <!-- <h2 class="three columns"> </h2> -->
+      <p> The final part in my coursework</p>
+
+      <p>Onto the final binary! Let's start by looking at the binary in graph mode in IDA:</p>
+
+      <p>
+
+        <div class="caption">
+          <img class="u-max-full-width" src="imgs/malcrackme/ex3s1.png">
+          Figure 1: Examining the <code>main</code> function in Ex3_2.
+        </div>
+
+      </p>
+      <p>
+        From a brief overview, we can see that there are now 3 <code>check</code> functions instead of 2 in the previous binary.
+
+      </p>
+      <p>
+        Let's examine the <code>check1</code> first.
+
+      </p>
+      <p>
+
+        <div class="caption">
+          <img class="u-max-full-width" src="imgs/malcrackme/ex3s2.png">
+          Figure 2: Examining the <code>check1</code> function in IDA.
+        </div>
+
+      </p>
+      <p>
+        This function seems to be awfully similar to the <code>check1</code> function in Ex2_2. Infact it is symantically the same (at least I think it is). The way I noticed it was because of the subtraction of 0x61, comparing the value of the
+        result to
+        0x19 and seeing it if is less than 0x19.
+
+      </p>
+      <p>
+        To recap this function for the benefit of the reader, this function simply checks whether all the characters in the entered input are all lowercase characters.
+
+      </p>
+      <p>
+        Following this, all we need to check now is what the return values for this function are for when the input consists of all lowercase characters and not.
+
+      </p>
+      <p>
+        We can see that when the entered string is not all lowercase, the function returns 0, signified by <code>xor</code> <code>eax</code> <code>eax</code> which is always 0. We know this because of the <code>ja</code> instruction before the jump
+        when the
+        character is 'invalid'.
+
+      </p>
+      <p>
+        Else the function returns 1, which happens when the loop has iterated through all of the entered string.
+        <br />
+
+      </p>
+      <p>
+        Now let's move onto the <code>check2</code> function.
+
+      </p>
+      <p>
+
+        <div class="caption">
+          <img class="u-max-full-width" src="imgs/malcrackme/ex3s3.png">
+          Figure 3: Examining the <code>check2</code> function in IDA.
+        </div>
+
+      </p>
+      <p>
+        Once again, this function seems awfully similar to the <code>check2</code> function in Ex2_2 but much simpler.
+        This is because of a few reasons; calculating the length of the string (except with the strlen function this time); the body of the loop extracting two characters at a time; calculating a sum based on the two characters and the
+        <code>div</code>
+        instruction after the loop.
+
+      </p>
+      <p>
+        The only difference between the two functions is really only in the main body of the loop, where the two adjacent characters are extracted (represented in ASCII) and then multiplied together and added to a total stored in the <code>edx</code>
+        register.
+
+      </p>
+      <p>
+        After this, the value $sum \mod len(enteredString) + 1$ is calculated (the same way as in Ex2_2 <code>check2</code>).
+        This value is then returned to <code>main</code>.
+        <br />
+        Now let's take a look at the final function <code>check3</code>:
+
+      </p>
+      <p>
+
+        <div class="caption">
+          <img class="u-max-full-width" src="imgs/malcrackme/ex3s4.png">
+          Figure 4: Examining the <code>check3</code> function in IDA.
+        </div>
+
+      </p>
+      <p>
+        Just by looking at the structure of the graph, we can see that a lot of conditions must be satisfied and we must follow the red arrows. This is because there is only one way to reach the final block which consists of the <code>mov</code>
+        <code>eax</code> <code>1</code> instruction but there are multiple ways of reaching the block labelled <code>loc_8048590</code>.
+
+      </p>
+      <p>
+        <br />
+        Looking at the first block of code, we can see that the length of the entered string is being compared to 6, from this we can infer that the entered string must be more than 6 characters long.
+
+      </p>
+      <p>
+        <br />
+        Now moving onto the second block, the <code>test</code> instruction is used to calculate the bitwise AND of the two operands, but the result is not stored, it is used to set the flags. The <code>al</code> register is the lowest byte of the
+        <code>eax</code> register which currently stores the length of the string.
+
+      </p>
+      <p>
+        The <code>jnz</code> instruction essentially checks if the two arguments are equal to 0 or not. By performing a bitwise AND on 1 and checking if it is equal to 0 or not, this is equivalent to checking if the entered string is of even length.
+
+      </p>
+      <p>
+        <br />
+        The next block of code starts off by dividing the contents of <code>eax</code> which contains the length of the string by 2. This is done by a bit shift to the right by 1.
+        What happens afterwards is that a pointer to the character (of the entered string) at the index of the just calculated number is compared to the first character in the entered string. If they are equal then the program proceeds to the next
+        block. Double checking this with GDB confirms this to be the case.
+
+      </p>
+      <p>
+        To give an example, consider the entered string "asdfasdf". <code>eax</code> would contain 4, the length of the string with right bit shift 1. Register <code>esi</code> points to the second 'a' in "asdfasdf" and is being compared to
+        the first 'a' in the string. As they are equal, the program goes forward.
+      </p>
+      <p>
+        <br />
+        The blocks (<code>loc_804857C</code> and <code>loc_8048570</code>) following this are, in my opinion, the trickiest to understand, however using GDB helped a lot with this.
+        These blocks form a loop, a loop which checks if the entered string, when split in half, are equal. We know this to be true because <code>esi</code> contains a pointer to the second half of the string; <code>eax</code> contains an offset
+        (len(enteredString) / 2 ), which when using during the iteration of the loop, allows you to access the same index in the second string. This is done in the <code>cmp</code> instruction.
+
+      </p>
+      <p>
+        <br />
+        In conclusion, this function on return, a valid entered string would return 1 whereas an invalid string would return 0.
+        <br />
+        Putting this all together, going back into <code>main</code>, we now know all the return values for each of the functions; <code>check1</code> returns 0 or 1; <code>check2</code> returns an integer in the range [0, len(enteredString] ;
+        <code>check3</code>
+        returns 0 or 1.
+
+      </p>
+      <p>
+        All of these return values are multiplied together, as seen by the multiple <code>imul</code> instructions with the registers containing the return values like in Ex2_2. This result is then compared to the length of the string, if they are
+        equal
+        then the entered string is a valid password, else invalid.
+
+      </p>
+      <p>
+        <br />
+        An example of a valid string is $aairaair$.
+        <br />
+        To summarise, the set of valid passwords satisfy the following conditions:
+
+      </p>
+
+      <ol >
+        <li> All characters in the password are lowercase [a-z]</li>
+
+        <li> The password must be greater than 6 characters and of even length</li>
+
+        <li> The password must consist of two repeated words put together, e.g. aairaair </li>
+
+        <li> The password must satisfy the formula $total \mod (len(password)+1) == len(password)$ where $total =  \sum_{i=0}^{n-2} password[i] * password[i+1]$ where the $i^{th}$ index of the password is an ASCII number
+          (See program below for more information)</li>
+      </ol>
+      <p>
+        In order to generate more passwords, here is a Python program that does so:
+      </p>
+      <pre>
+    import&nbsp;sys
+    import&nbsp;string
+    from&nbsp;itertools&nbsp;import&nbsp;chain,&nbsp;product
+
+    def&nbsp;bruteforce(charset,&nbsp;maxlength):
+    &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;(''.join(candidate)
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;candidate&nbsp;in&nbsp;chain.from_iterable(product(charset,&nbsp;repeat=i)
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(1,&nbsp;maxlength&nbsp;+&nbsp;1)))
+
+
+    &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;=&nbsp;string.lowercase
+    &nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;attempt&nbsp;in&nbsp;bruteforce(string,&nbsp;6):
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;len(attempt)&lt;4:
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue
+    &nbsp;&nbsp;&nbsp;&nbsp;password&nbsp;=&nbsp;attempt*2
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;total&nbsp;=&nbsp;0
+    &nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(len(password)-1):
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;total&nbsp;+=&nbsp;ord(password[i])*ord(password[i+1])
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;finalVal&nbsp;=&nbsp;total&nbsp;%&nbsp;(len(password)+&nbsp;1)
+    &nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;finalVal&nbsp;==&nbsp;len(password):
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(password)
+    </pre>
+
+
+
+
+    </div>
+  </div>
+
+
+</body>
+
+</html>

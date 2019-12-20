@@ -1,0 +1,272 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bocodeom: 1em;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+
+    .caption {
+      text-align: center
+    }
+
+    img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 50%;
+    }
+  </style>
+  <!--  Use LaTeX in html -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\\(', '\\)']
+        ]
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="blog/blog.html">Blog</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h1> My First Crackme (Part 2)</h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns"> Ex2_2 </h2>
+      <p class "three columns"> </p> <br>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <!-- <h2 class="three columns">Solution</h2> -->
+      <p> Hello and welcome to the second part of this crackme series, these binaries progressively get (somewhat) harder to reverse engineer but nothing is too hard for me! </p> <br>
+
+      <p>Let's first start out with a high level perspective of what the binary does:</p> <br>
+
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s1.png">
+        Figure 1: Checking control flow of <code>main</code> with IDA.
+      </div>
+
+      <p> As we can see, there are now 2 check functions after the user has entered a string.</p> <br>
+      <br />
+      <p>Let's work on <code>check1</code> first.</p> <br>
+
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s2.png">
+        Figure 2: Examining the <code>check1</code> function.
+      </div>
+
+      <p>
+        Once again we have a loop as seen by the control flow of the <code>loc_8048499</code> block.
+        Recalling that before in the previous binary, <code>Ex1_2</code>, the <code>check</code> function looped through the user input.
+        Similarly in <code>Ex2_2</code> , this input is also looped through as seen by the <code>movzx</code> instruction which extracts a character at a time.
+      </p> <br>
+      <br />
+
+      <p>
+        We know that characters are represented as numbers using ASCII in computers. This loop subtracts 0x61 (which is 'a' in ASCII) from the character in the current iteration.
+        The value is then compared to 0x19 = 25, if the value is above it, then the <code>check1</code> function returns -1 (denoted by two's complement 0xFFFFFFFF). Else the function returns 1.
+      </p> <br>
+
+      <p>
+        From this we can assume that the purpose of the <code>check1</code> is to check that all the characters in the entered string are all lowercase [a-z].
+        Using GDB to check this confirms this to be true by looking that the contents of <code>eax</code> directly after <code>main</code> calls <code>check1</code>.
+      </p> <br>
+
+      <p>
+        Now let's take a look at <code>check2</code>:
+      </p> <br>
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex2s3.png">
+        Figure 3: Examining the <code>check2</code> function.
+      </div>
+      <p>
+        As we can see just by looking at the blocks and the direction of the arrows, we have another loop.
+      </p> <br>
+
+      <!---->
+      <p>
+        The most striking part of the start block of <code>check2</code> is the <code>repne scasb not ecx</code>.
+        Reading online:
+        (https://stackoverflow.com/questions/26783797/repnz-scas-assembly-instruction-specifics)
+      </p> <br>
+
+      <p>
+        This instruction calculates the length +1 of a string stored in <code>edi</code> and stores the output in the given register, which happens to be <code>ecx</code>.
+        In this case, the entered string was stored on the stack in <code>[esp+0x14+arg_0]</code> which was then moved to <code>edx</code> and then over to <code>edi</code>.
+      </p> <br>
+
+      <p>
+        The program then calculates the length of the string by subtracting 1 from <code>ecx</code>and storing it in <code>eax</code>.
+      </p> <br>
+
+      <p>
+        The two <code>lea</code> commands are used to set up the loop, the <code>lea</code> command used to point to the second character of the string (which you will see why in the body of the loop) and the second <code>lea</code> instruction used
+        to point to
+        the end of the string, to determine the end of the loop condition.
+      </p> <br>
+
+      <p>
+        Now let us move to the body of the loop. To be honest, I do not understand what the overall purpose of this loop does but by examining the assembly, it is a lot of random calculations and bit manipulations. I figured this out after using GDB
+        and examining the contents of the registers.
+      </p> <br>
+
+      <p>
+        The assembly can be summarised by the following Python code:
+      </p> <br>
+
+      <pre>
+      &nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(len(enteredString)-1):
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;=&nbsp;ord(enteredString[i])
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b&nbsp;=&nbsp;ord(enteredString[i+1])
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eax&nbsp;=&nbsp;&nbsp;((a*b*0x55555556)&nbsp;&amp;0xFFFFFFFF)
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;edx&nbsp;=&nbsp;&nbsp;((a*b*0x55555556)&nbsp;&#62;&#62;&nbsp;32)&nbsp;&amp;0xFFFFFFFF
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ecx&nbsp;=&nbsp;&nbsp;(((a*b)&nbsp;&amp;&nbsp;0xFFFFFFFF)&nbsp;&#62;&#62;&nbsp;0x1F)&nbsp;&amp;0x1
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;edx&nbsp;-=&nbsp;ecx
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum&nbsp;+=&nbsp;edx&nbsp;&nbsp;+&nbsp;(2//a)
+      </pre>
+
+      <p>
+        The register <code>edi</code> is used for the sum, this is trivial to spot since the register <code>edi</code> is only updated towards the end of the loop. As well as this, the <code>edi</code> is used after the loop which confirms our
+        theory.
+      </p> <br>
+
+      <p>
+        After the end of the loop, in the final part of the <code>check2</code> function, we can see that another set of calculations are performed. The most important part of this is the <code>div</code> instructions. The way that the
+        <code>div</code> command
+        works is that it calculates <code>eax/ecx</code> (instead of <code>ecx</code> it could be another register when specified with the <code>div</code> instruction) and stores the answer in <code>eax</code> and the remainder in <code>edx</code>.
+      </p> <br>
+
+      <p>
+        By looking at the registers used, the last block of assembly essentially performs $sum \mod len(enteredString) + 1$ where sum is the variable used to store the sum in the loop.
+      </p> <br>
+      <p>
+        So based on this function we can see that an integer value in the range [0, len(enteredString)] is returned.
+      </p> <br>
+
+      <p>
+        Now going back to the main function, we can see that the return values of the <code>check1</code> and <code>check2</code> functions are stored in the <code>ebx</code> and the <code>edx</code> registers respectively, we know this since
+        directly
+        after the
+        functions are called, the contents of <code>eax</code> are moved into those registers.
+      </p> <br>
+      <p>
+        Once again we see the <code>repne scasb ecx</code> instruction followed by subtracting 1 from the <code>ecx</code>. This means the <code>ecx</code> instruction now contains the length of the entered string.
+      </p> <br>
+
+      <p>
+        Now the final parts of this block of code in <code>main</code> is that the return values from <code>check1</code> and <code>check2</code> are multiplied together and stored in <code>edx</code>.
+      </p> <br>
+
+      <p>
+        This value is then compared with the length of the string, if they are not equal then the password fails otherwise it passes.
+      </p> <br>
+
+      <p>
+        To summarise, the password must satisfy the following rules:
+      </p> <br>
+
+      <ol>
+        <li>The password must only consist of lowercase characters [a-z]</li>
+        <li> From the code given above, $sum \mod len(enteredString) + 1 == len(enteredString)$</li>
+      </ol>
+
+      <p>
+        An example of a valid password is ad and in order to generate more solutions, you can do so by the following Python code :
+      </p> <br>
+
+      <pre>
+        <code>
+      import&nbsp;sys
+      import&nbsp;string
+      from&nbsp;itertools&nbsp;import&nbsp;chain,&nbsp;product
+      #https://stackoverflow.com/questions/11747254/python-brute-force-algorithm
+
+      def&nbsp;bruteforce(charset,&nbsp;maxlength):
+      &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;(''.join(candidate)
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;candidate&nbsp;in&nbsp;chain.from_iterable(product(charset,&nbsp;repeat=i)
+      	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(1,&nbsp;maxlength&nbsp;+&nbsp;1)))
+
+      #will&nbsp;generate&nbsp;all&nbsp;strings&nbsp;of&nbsp;upto&nbsp;4&nbsp;characters&nbsp;long,&nbsp;change&nbsp;as&nbsp;required.
+
+      string&nbsp;=&nbsp;string.lowercase
+      for&nbsp;attempt&nbsp;in&nbsp;bruteforce(string,&nbsp;4):
+      &nbsp;&nbsp;&nbsp;&nbsp;sum&nbsp;=&nbsp;0
+      #&nbsp;inner&nbsp;body&nbsp;of&nbsp;the&nbsp;loop
+      &nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(len(attempt)-1):
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;=&nbsp;ord(attempt[i])
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b&nbsp;=&nbsp;ord(attempt[i+1])
+
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eax&nbsp;=&nbsp;&nbsp;(((a*b*0x55555556)&nbsp;&amp;0xFFFFFFFF))
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;edx&nbsp;=&nbsp;&nbsp;((a*b*0x55555556)&nbsp;&#62;&#62;&nbsp;32)&nbsp;&amp;0xFFFFFFFF
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ecx&nbsp;=&nbsp;&nbsp;(((a*b)&nbsp;&amp;&nbsp;0xFFFFFFFF)&nbsp;&#62;&#62;&nbsp;0x1F)&nbsp;&amp;0x1
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;edx&nbsp;-=&nbsp;ecx
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum&nbsp;+=&nbsp;edx&nbsp;&nbsp;+&nbsp;(2&nbsp;//a)
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#post&nbsp;loop
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnVal&nbsp;=&nbsp;sum&nbsp;%&nbsp;(len(attempt)&nbsp;+&nbsp;1)
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#main&nbsp;function
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;returnVal&nbsp;==&nbsp;len(attempt):
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(attempt)
+
+    </code>
+</pre>
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+
+
+</body>
+
+</html>

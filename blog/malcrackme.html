@@ -1,0 +1,245 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="hcodeps://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+      /* text-align: center */
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bocodeom: 1em;
+
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+
+    .caption {
+      text-align: center
+    }
+
+    img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 50%;
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+</script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="../index.html">Home</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../blog/blog.html">Blog</a>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <h1> My First Crackme (Part 1)</h1>
+    </div>
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <!-- <h2 class="three columns"> Problem </h2> -->
+      <p class>This is probably one of my favourite courseworks during university. We all got given 3 binaries and we had to reverse engineer them by any means necessary to find the set of passwords which the binaries would accept. I could've cheated
+        and just patch the binary so that it would accept all password but there's no fun in that! This writeup was originally in LaTeX then directly converted to HTML followed by a bunch of tweaking so there may be typos in the odd place, sorry!</p>
+
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <h2 class="three columns">Ex1_2</h2>
+      <p> I first started off by running <code>objdump -d</code> to get the assembly code of the binary. From this I found the functions that were most relevant to finding the password for the binary were <code>main</code> and <code>check</code>.
+      </p>
+      <p>
+        Taking a further look at <code>main</code> :
+      </p>
+      <!-- <img class="u-max-full-width" src="imgs/malcrackme/ex1s1.png"> -->
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s1.png">
+        Figure 1: Assembly code of <code>main</code> with <code>objdump</code> <code>-d</code>.
+      </div>
+      <p>
+        After the user has input a string (using the <code>scanf</code> function) of some sort, the <code>check</code> function is called. Then the <code>strlen</code> function is called and a few conditional jumps are performed.
+      </p>
+      <p>
+        To becodeer understand the control flow of this program, I then used IDA to visualise the program in an easier way.
+      </p>
+
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s2.png">
+        Figure 2: Control flow of <code>main</code> in IDA.
+      </div>
+
+      <p>
+        From this we can see that before any jumps are made, the value from <code>strlen</code>, which computes the length of the string in <code>ebx</code>(the string the user has entered), is compared with the return value of <code>check</code>. We
+        know this
+        is
+        true because the return value of any function is always stored in <code>eax</code>. Similarly we know that the string the user has entered is stored in <code>ebx</code> since running GDB tells us.
+      </p>
+
+      <p>
+        The <code>cmp</code> instruction followed by the <code>jz</code> instruction implies checking the two values are equal.
+        This means in order to enter a correct password for this program, the return value of <code>check</code> must equal the length of the string entered.
+      </p>
+
+      <p>
+        Now let us take a deeper look into the <code>check</code> function.
+      </p>
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s3.png">
+        Figure 3: Control Flow of <code>check</code> in IDA.
+      </div>
+
+      <p>
+        The overall structure of this represents a loop, we know this since we test for a condition, jump, run a block of code and then loop again.
+      </p>
+      <p>
+        This was where it started to get tricky so in order to understand what was going on I started to use GDB.
+      </p>
+
+
+
+
+
+
+
+
+
+
+      <p>
+        I found out that in the loop, the register <code>edi</code> contained the length of the string and <code>ecx</code> was a variable used as a counter variable starting from 0.
+      </p>
+
+      <p>
+        In the body of the loop, I found out that the <code>movsx</code> instruction allowed to store 2 adjacent characters of the string entered in registers <code>ebx</code> and <code>esi</code> respectively.
+        In programs, characters are stored as numbers in the ASCII format.
+      </p>
+
+
+      <p>
+        Here is an example of what I mean in GDB:
+      </p>
+
+      <div class="caption">
+        <img class="u-max-full-width" src="imgs/malcrackme/ex1s4.png">
+        Figure 4: Checking values of registers in GDB with input 27.
+      </div>
+
+
+      <p>
+        So in this example <code>ebx</code> would contain 7 and <code>esi</code> would contain 2.
+      </p>
+
+
+      <p>
+        The rest of the assembly in this loop is easy to understand, a running total is kept of the difference between the characters (right character minus left character) and is stored in <code>edx</code>.
+      </p>
+
+      <br />
+      <p>
+        In the last block of code, let's work from the end to start to make it easier to explain. In the final <code>mov</code> command we can see that the contents of <code>edx</code> is the what the function returns. So if we can understand what is
+        in <code>edx</code>,we can fully understand the program.
+      </p>
+
+      <p>
+        Upon research of the <code>div</code> command, it stores the result of the remainder from the calculation, <code>eax</code> <code>div</code> <code>ecx,</code> in the <code>edx</code> register. Essentially what this means is that
+        <code>edx</code> = <code>eax</code> mod <code>ecx</code> .
+      </p>
+
+      <p>
+      We know from earlier that <code>strlen</code> was called on the entered string. This was stored in the register <code>eax</code>. The <code>lea</code> command makes <code>ecx</code> = len(string) + 1 which I double checked with GDB.
+</p>
+
+  <p>
+      One extra thing to note is that the running total from the loop stored in <code>edx</code> is now moved to <code>eax</code>.
+    </p>
+
+      <p>
+      So now the puzzle is complete, in summary, this function computes the sum of the differences in adjacent characters \mod len(string) + 1 . This value is then compared to the length of the string in <code>main</code>. If the values are equal,
+      then it is a correct password.
+</p>
+<p>
+      Using mathematics, we can heavily simplify the condition to just:
+</p>
+
+      <p>
+      Any string of length n, c<sub>1</sub> c<sub>2</sub> ... c<sub>n</sub>, where:
+</p>
+
+        \[( ASCII(c_n) - ASCII(c_1) ) \mod (n+1) == n\]
+
+<p>
+      Where $ASCII(&#183;)$ gives the ASCII number of a character.
+</p>
+
+    <p>
+      Note that the string can also consist of unprintable characters and still be accepted, for example the string with two hex characters, "\x26\x28", will be accepted by the program.
+</p>
+
+  <p>
+      So overall a final solution could be the number 35.
+      A program to generate a lot of solutions can be given by the following Python code, note that I do not include non printable characters in this.
+</p>
+
+<!-- Used a LaTeX to HTML converter for the entire document, don't judge-->
+      <pre>
+      import&nbsp;sys
+      import&nbsp;string
+      from&nbsp;itertools&nbsp;import&nbsp;chain,&nbsp;product
+
+      def&nbsp;bruteforce(charset,&nbsp;maxlength):
+      &nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;(''.join(candidate)
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;candidate&nbsp;in&nbsp;chain.from_iterable(product(charset,&nbsp;repeat=i)
+      	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;i&nbsp;in&nbsp;range(1,&nbsp;maxlength&nbsp;+&nbsp;1)))
+      		&nbsp;&nbsp;&nbsp;&nbsp;LENGTH&nbsp;=&nbsp;5
+      		&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;=&nbsp;string.printable
+      		&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;attempt&nbsp;in&nbsp;bruteforce(string,&nbsp;LENGTH):
+      		&nbsp;&nbsp;&nbsp;&nbsp;	if&nbsp;(ord(attempt[-1])&nbsp;-ord(attempt[0]))&nbsp;%&nbsp;(len(attempt)&nbsp;+&nbsp;1)==&nbsp;len(attempt):
+      					print(attempt)&nbsp;
+
+      </pre>
+
+
+    </div>
+  </div>
+
+
+
+
+
+
+</body>
+
+</html>
