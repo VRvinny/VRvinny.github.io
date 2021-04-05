@@ -1,0 +1,123 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bottom: 1em;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+  </style>
+  <!--  Use LaTeX in html -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\\(', '\\)']
+        ]
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="../index.html">Home</a>
+    <a href="../projects.html">Projects</a>
+    <a href="blog.html">Blog</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h1>Upgrading Python without everything breaking</h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <!-- <h2 class="three columns">Solution</h2> -->
+      <p>I put off fixing this issue for ~2 years because I (was lazy and) thought it would take hours to fix, turns out
+        it was a simple.
+        This post is more for future me to remember what I did to upgrade Python and the fix in the event I will run
+        into the problem again inevitably.
+        It may help you, it most likely won't though. </p>
+      <p>
+        I installed Python 3.7 and wanted to alias <code>python3</code> to run Python version 3.7 instead of 3.5.
+        Now I could just set an alias by adding <code>alias python3=python3.7</code> to my <code>.bashrc</code> file but
+        that change will only be local to my terminal and the user on the machine.
+        With a bit of research I stumbled upon this article <a
+          href="https://unix.stackexchange.com/questions/410579/change-the-python3-default-version-in-ubuntu">here</a>.
+      </p>
+
+      <p>
+        The solution was to run <code>sudo update-alternatives --config python3</code> and set the priority for version
+        3.7 to be number 1.
+        This obviously didn't work as I am writing a post about it so what went wrong?
+      </p>
+
+      <p>
+        Running <code>gnome-terminal</code> comes up with the following error:
+
+      <pre><code>Traceback (most recent call last):
+File "/usr/bin/gnome-terminal", line 9, in &lt;module&gt;
+  from gi.repository import GLib, Gio
+File "/usr/lib/python3/dist-packages/gi/__init__.py", line 42, in &lt;module&gt;
+  from . import _gi
+ImportError: cannot import name '_gi' from 'gi' (/usr/lib/python3/dist-packages/gi/__init__.py)</code></pre>
+    </p>
+    <p>
+      Given this error message, it probably means that I don't have <i>gi</i> installed.
+      Poking around the directory shows that there are two files dependent on using Python 3.5, <i>_gi.cpython-35m-x86_64-linux-gnu.so</i> and <i>_gi_cairo.cpython-35m-x86_64-linux-gnu.so</i>.
+      These two files are binaries and based on the information <a href="https://medium.com/@haripriya_25086/ubuntu-worries-what-is-with-python-upgrade-and-gnome-terminal-failure-a539e16d5e28">here</a>, you can copy the files and rename it to the 3.7 version.
+      <br>
+      In my opinion, it's more elegant and cleaner to use a symlink for this as this means I can remember what I did and I don't have to deal with any cluttered files. You can create symlinks using the following command:
+
+      <pre><code>sudo ln -s /usr/lib/python3/dist-packages/gi/_gi_cairo.cpython-{35m,37m}-x86_64-linux-gnu.so
+sudo ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-{35m,37m}-x86_64-linux-gnu.so</code></pre>
+      </p>
+      <p>
+        And with that everything is working again!
+      </p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h4> TL;DR</h4>
+
+      <p>
+        Install Python3.X.<br>
+        Run <code>sudo update-alternatives --config python3</code> and update it to your preferred version.<br>
+        Run <code>sudo ln -s /usr/lib/python3/dist-packages/gi/_gi_cairo.cpython-{3Ym,3Xm}-x86_64-linux-gnu.so</code><br>
+          and <code>sudo ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-{3Ym,3Xm}-x86_64-linux-gnu.so</code><br> 
+          replacing Y with the old Python3 version in use.
+      </p>
+    </div>
+  </div>
+</body>
+
+</html>
