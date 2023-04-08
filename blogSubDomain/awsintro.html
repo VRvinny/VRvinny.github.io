@@ -1,0 +1,115 @@
+<html> 
+ 
+<head> 
+  <meta charset="utf-8" /> 
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet"> 
+  <link rel="stylesheet" type="text/css" href="../css/style.css"> 
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css"> 
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css"> 
+  <!-- <link rel="stylesheet" href="css/projects.css"> --> 
+  <style> 
+    * { 
+      font-family: "Roboto", sans-serif; 
+      color: #FFFFFF; 
+    } 
+p {
+  font-size: 1.3em;
+  margin: auto;
+  /* padding-top: 1em; */
+  padding-bottom: 1em;
+}
+ 
+    body { 
+      background-color: #1A222C; 
+    } 
+ 
+  </style> 
+<!--  Use LaTeX in html -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script>
+ MathJax = {
+   tex: {
+     inlineMath: [
+       ['$', '$'],
+       ['\\(', '\\)']
+     ]
+   }
+ };
+</script>
+
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head> 
+ 
+<body> 
+  <div class="text-bar" style="display: flex; justify-content: flex-end"> 
+  <a href="../index.html">Home</a> 
+  <a href="../projects.html">Projects</a> 
+  <a href="blog.html">Blog</a> 
+  </div> 
+<div class="container">
+  <div class="row">
+    <h1> A brief introduction to AWS Credentials</h1>
+  </div>
+</div>
+
+
+<div class="container">
+  <div class="row">
+    <!-- <h2 class="three columns"> TITLE </h2> -->
+    <!-- <p class "three columns">Description </p>? -->
+  </div>
+</div>
+ <div class="container">
+  <div class="row">
+    <!-- <h2 class="three columns">Solution</h2> -->
+    <p>I initially wrote this to provide some guidance for the AWS cloud lab, Hailstorm lab on HTB, figured it would be useful out in the world too.</p>
+
+    <!-- <h3 id="a-brief-introduction-to-aws-credentials">A brief introduction to AWS credentials</h3> -->
+<p>When you find AWS credentials you&#39;ll need to set them in order to connect to any of the supported services. </p>
+<p>There are a few different types of credentials, that you will encounter in the lab. A full list of these types can be found at: <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids">https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids</a>. </p>
+<p>The two main categories of credentials you will encounter during the lab can be classified as permanent and temporary credentials. Permanent credentials will consist of a pair, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. The prefix of the AWS_ACCESS_KEY_ID will be ASIA. Temporary credentials will consist of a triplet, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN. The temporary credentials can be identified by the presence of the AWS_SESSION_TOKEN and the prefix of the AWS_ACCESS_KEY_ID being AKIA. These temporary credentials range from lasting 1-12 hours depending on the configuration.</p>
+<p>There are two ways to set them, via environment variables, and via the command, <code>aws configure</code>. Both methods have their pros and cons, I personally use the environment variables as it is much easier to work with when using scripts. Obviously, don&#39;t do this on real engagements as they will be stored in certain files as you&#39;ll find out ;).</p>
+<p>You can set the credentials using the following commands:</p>
+<pre><code>export AWS_ACCESS_KEY_ID=XXX<span class="hljs-comment">;</span>
+export AWS_SECRET_ACCESS_KEY=XXX<span class="hljs-comment">;</span>
+export AWS_SESSION_TOKEN=XXX<span class="hljs-comment">;</span>
+</code></pre><p>If you use <code>aws configure</code> to set the credentials, you won&#39;t be able the AWS_SESSION_TOKEN. This is particularly frustrating for temporary credentials as you&#39;ll either need to run <code>aws configure set aws_session_token XXXX</code> or go to the file, ~/.aws/credentials and add the line <code>aws_session_token = XXXX</code> </p>
+<p>Once you have your credentials set, run <code>aws sts get-caller-identity</code>. Memorise this off by heart because you&#39;ll be using every time you want to verify what account/role you are currently using/have found.</p>
+<p>Note that you may run into issues like, <code>An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: </code><br> <code>The security token included in the request is invalid</code>, if you set these credentials using both these ways at the same time. If this is the case then either remove the file ~/.aws/credentials or unset the environment variables.</p>
+<h3 id="tooling">Tooling</h3>
+<p>There are several tools which can automate checking what services you have access to. These are but not limited to:</p>
+<ul>
+<li><a href="https://github.com/RhinoSecurityLabs/pacu">https://github.com/RhinoSecurityLabs/pacu</a></li>
+<li><a href="https://github.com/carnal0wnage/weirdAAL">https://github.com/carnal0wnage/weirdAAL</a></li>
+<li><a href="https://github.com/andresriancho/enumerate-iam">https://github.com/andresriancho/enumerate-iam</a></li>
+</ul>
+<p>These tools will be useful throughout as you progress through the lab. However, these tools often throw false positives and maybe not provide all the information that you need. Manual enumeration in certain cases will sometimes be better.</p>
+<h3 id="other-stuff">Other stuff</h3>
+<p>If you need small hints, the names of the flags and contents of the previous flags can sometimes give an indicator as to what you need to research or find.</p>
+<p>Remember to make a note of all the AWS credentials that you find, some accounts in particular will be repeatedly be useful later on. </p>
+<h4 id="further-resources">Further Resources</h4>
+<p>You&#39;ll also find some resources tailored towards pentesting AWS infrastructure, a lot of the information will be irrelevant for the lab (from what I&#39;ve seen in the lab) but does provide a good background knowledge and is good material for further reading.</p>
+<ul>
+<li><a href="https://hackingthe.cloud/aws/general-knowledge/aws_organizations_defaults/">https://hackingthe.cloud/aws/general-knowledge/aws_organizations_defaults/</a></li>
+<li><a href="https://cloud.hacktricks.xyz/pentesting-cloud/aws-pentesting/aws-services">https://cloud.hacktricks.xyz/pentesting-cloud/aws-pentesting/aws-services</a></li>
+<li><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Cloud%20-%20AWS%20Pentest.md">https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Cloud%20-%20AWS%20Pentest.md</a></li>
+</ul>
+<h4 id="port-forwarding">Port forwarding</h4>
+<p>SSH port forwarding will be useful in the later parts of the lab. If you want to access a particular service X (such as a website) from a box Y that Y only has access to, you can run a command like: </p>
+<p><code>ssh root@3.136.91.110 -L 1337:169.254.169.254:80</code></p>
+<p>You can then access the service (http:/169.254.169.254:80 hosted on X) through <a href="http://localhost:1337">http://localhost:1337</a> on your host machine which routes your traffic through Y.</p>
+<ul>
+<li><a href="http://dirk-loss.de/ssh-port-forwarding.htm">http://dirk-loss.de/ssh-port-forwarding.htm</a></li>
+</ul>
+
+
+
+    </div>
+    </div>
+ 
+ 
+</body> 
+ 
+</html> 
+ 
