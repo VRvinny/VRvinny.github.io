@@ -1,0 +1,135 @@
+<html> 
+ 
+<head> 
+  <meta charset="utf-8" /> 
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet"> 
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/style.css"> 
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/normalize.css"> 
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/skeleton.css"> 
+  <!-- <link rel="stylesheet" href="css/projects.css"> --> 
+  <style> 
+    * { 
+      font-family: "Roboto", sans-serif; 
+      color: #FFFFFF; 
+    } 
+p {
+  font-size: 1.3em;
+  margin: auto;
+  /* padding-top: 1em; */
+  padding-bottom: 1em;
+}
+ 
+    body { 
+      background-color: #1A222C; 
+    } 
+ 
+  </style> 
+<!--  Use LaTeX in html -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script>
+ MathJax = {
+   tex: {
+     inlineMath: [
+       ['$', '$'],
+       ['\\(', '\\)']
+     ]
+   }
+ };
+</script>
+
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head> 
+ 
+<body> 
+  <div class="text-bar" style="display: flex; justify-content: flex-end"> 
+  <a href="https://ramgi.dev">Home</a> 
+  <a href="https://projects.ramgi.dev/">Projects</a> 
+  <a href="https://blog.ramgi.dev/blog.html">Blog</a> 
+  </div> 
+<div class="container">
+  <div class="row">
+    <h1>Converting an EC2 instance into an .OVA file</h1>
+  </div>
+</div>
+
+
+<div class="container">
+  <div class="row">
+  </div>
+</div>
+ <div class="container">
+  <div class="row">
+    <!-- <h2 class="three columns"></h2> -->
+    <p> A few days ago I found out it was possible to convert AWS EC2 instances into OVA files which can then be used to run in VMWare. 
+      It's pretty nifty and lets you work on things locally as opposed to needing an internet connection.</p>
+    <p>
+      You'll need to do a few things before you can do this:
+      <ul>
+        <li> An EC2 instance already running </li>
+        <li> An S3 bucket to drop the convertedOVA file into</li>
+      </ul>
+    </p>
+    <p>
+      First you will need to configure the correct permissions on the S3 bucket in order to let the service to be able to write to the bucket.
+    </p>
+
+    <pre><code>$ aws s3api put-bucket-acl --bucket bucket_name --grant-read id="alphanumeric-id-string"
+      aws s3api put-bucket-acl --bucket bucket_name --grant-write id="alphanumeric-id-string"</code></pre>
+<p>
+  Replace alphanumeric-id-string with <code>c4d8eabf8db69dbe46bfe0e517100c554f01200b104d59cd408e777ba442a322</code> which is the canonical account ID to let a region specific account write to the S3 bucket.
+
+  Then you can run the command below, specifying your bucket name and path name:
+</p>
+
+    <pre><code>$ aws ec2 create-instance-export-task --instance-id i-XXXXXXXXXXXXXXXXX \
+      --target-environment vmware \
+      --export-to-s3-task DiskImageFormat=vmdk,ContainerFormat=ova,S3Bucket=$$bucket_name$$,S3Prefix=$$path_name/$$
+</code></pre>
+<p>
+  Next is the long part, waiting to convert the instance into an image, it took me around ~3 hours to convert mine. You can check on the status with:
+</p>
+<pre> <code>$ aws ec2 describe-export-tasks --export-task-ids export-i-XXXXXXXXXXXXXXXXX
+  
+  {
+          "ExportTask": {
+              "ExportTaskId": "export-i-XXXXXXXXXXXXXXXXX",
+              "ExportToS3Task": {
+                  "ContainerFormat": "ova",
+                  "DiskImageFormat": "vmdk",
+                  "S3Bucket": "$$bucket_name$$",
+                  "S3Key": "$$path_name$$/export-i-XXXXXXXXXXXXXXXXX.ova"
+              },
+              "InstanceExportDetails": {
+                  "InstanceId": "i-XXXXXXXXXXXXXXXXX",
+                  "TargetEnvironment": "vmware"
+              },
+              "State": "active"
+          }
+      }</code></pre>
+
+    <p>
+      Finally, you can then download the .ova file from your S3 bucket. :)
+    </p>
+
+    <p>
+      Sidenote - If you own the AMI, then you can convert that directly using the guide here:<br> 
+      <a href="https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport_image.html">https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport_image.html</a>.
+      However, it is more hassle as you need to use an account with the right role and policies.
+    </p>
+    <p>
+        References:
+        <ul>
+          <li><a href= "https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport.html">https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport.html</a></li>
+          <li><a href="https://docs.aws.amazon.com/cli/latest/reference/ec2/create-instance-export-task.html">https://docs.aws.amazon.com/cli/latest/reference/ec2/create-instance-export-task.html</a></li>
+        </ul>
+    </p>
+
+    </div>
+    </div>
+ 
+ 
+</body> 
+ 
+</html> 
+ 
