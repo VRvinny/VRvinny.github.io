@@ -1,0 +1,156 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/style.css">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 0em; */
+      padding-bottom: 0.5em;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+
+    pre {
+      overflow: auto;
+      white-space: nowrap;
+    }
+  </style>
+  <!--  Use LaTeX in html -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\\(', '\\)']
+        ]
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="https://ramgi.dev">Home</a>
+    <a href="https://projects.ramgi.dev/">Projects</a>
+    <a href="https://blog.ramgi.dev/blog.html">Blog</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h1> How to log like me</h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+      <!-- <h2 class="three columns"> How 2 log </h2> -->
+      <!-- <p class "three columns">Logging  </p> -->
+      <p>Logging is important. It can save the day. Here's how to log like <a
+          href="https://www.youtube.com/watch?v=t9Ou4Ff718Y&list=PLiXrb8yMX_vNFFqaYatWLf1LBgbCPtqZv">me</a>.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h2>Windows</h2>
+      <p> Make your prompt look like this:
+
+        <code>
+          DD/MM/YYYY 21:18:25 user pwd >   
+        </code>
+      </p>
+
+      <p>
+        By doing this:
+      <pre><code>
+  function prompt { write-host $(get-date)$(whoami) $(pwd)'>' -nonewline ; return " "}
+  #OR 
+  echo "function prompt { write-host $(get-date)$(pwd)'>' -nonewline ; return `" `"}" > C:\Users\AAAA\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 
+          </code>
+        </pre>
+      </p>
+              <p>
+                Log your output with <code> Start-Transcript</code> and <code>Stop-Transcript</code>.
+              </p>
+    </div>
+
+
+
+
+
+    <div class="row">
+      <h2>Linux</h2>
+      <p> Make your prompt look like this -
+        <code>
+          [DD-MMM-YY 21:30:40] user@host:pwd >   
+        </code>
+      </p>
+
+      <p>
+        By doing this:
+      </p>
+
+      <pre>
+        <code>
+  export PS1='[`date  +"%d-%b-%y %T"`] \u@\h:\w > '
+
+  export PS1='[`date  +"%d-%b-%y %T"`] \u@\h\[\033[01;31m\] `DGTWINT=$(ip route get 1.1.1.1 | grep via | cut -f 5 -d " ") && FASTINT=$(grep ^ /dev/null  /sys/class/net/*/speed 2> /dev/null | sort -t: -k 2 | tail -1 | cut -f 5 -d "/") && if [ -n "${DGTWINT}" ] ; then TESTINT="${DGTWINT}"; else TESTINT="${FASTINT}"; fi && IPADDR=$(ip addr show dev "${TESTINT}" | grep "inet " | sed -e "s/.*inet //" | cut -f 1 -d "/") && echo "${TESTINT:0:1}:${IPADDR}"`\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] > '
+
+  #OR 
+
+  cat << EOF >> ~/.bashrc
+  export PS1='[`date  +"%d-%b-%y %T"`] \u@\h:\w > '
+  EOF
+
+  cat << EOF >> ~/.bashrc
+  export PS1='[`date  +"%d-%b-%y %T"`] \u@\h\[\033[01;31m\] `DGTWINT=$(ip route get 1.1.1.1 | grep via | cut -f 5 -d " ") && FASTINT=$(grep ^ /dev/null  /sys/class/net/*/speed 2> /dev/null | sort -t: -k 2 | tail -1 | cut -f 5 -d "/") && if [ -n "${DGTWINT}" ] ; then TESTINT="${DGTWINT}"; else TESTINT="${FASTINT}"; fi && IPADDR=$(ip addr show dev "${TESTINT}" | grep "inet " | sed -e "s/.*inet //" | cut -f 1 -d "/") && echo "${TESTINT:0:1}:${IPADDR}"`\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] > '
+  EOF
+
+  #WITH 
+  
+  source ~/.bashrc
+
+  . ~/.bashrc
+      </code>
+    </pre>
+
+      <p> Log your output with:
+        <code>script -a logfilename.txt</code>
+      </p>
+
+      <p>
+        If you try and view the script file anywhere but in your terminal, it will also print out the ANSI colour codes
+        and random control characters. You can try and filter them out with:</p>
+      <pre><code>| sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})*)?[mGK]//g" | tr -dc '[[:print:][:space:]]'</code></pre>
+      <p>
+        but
+        it's
+        not a great fix.
+      </p>
+
+    </div>
+
+
+  </div>
+
+
+</body>
+
+</html>
