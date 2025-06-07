@@ -1,0 +1,177 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/style.css">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="https://ramgi.dev/css/skeleton.css">
+  <!-- <link rel="stylesheet" href="css/projects.css"> -->
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 1.3em;
+      margin: auto;
+      /* padding-top: 1em; */
+      padding-bottom: 1em;
+    }
+
+    body {
+      background-color: #1A222C;
+    }
+  </style>
+  <!--  Use LaTeX in html -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\\(', '\\)']
+        ]
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+  <div class="text-bar" style="display: flex; justify-content: flex-end">
+    <a href="https://ramgi.dev">Home</a>
+    <a href="https://projects.ramgi.dev/">Projects</a>
+    <a href="https://blog.ramgi.dev/blog.html">Blog</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <h1> InkyPi E-ink displays</h1>
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="row">
+
+      <p>I came across <a href="https://www.youtube.com/watch?v=L5PvQj1vfC4">this</a> video a few months ago about a
+        Raspberry Pi + e-ink display project:</p>
+      <iframe style="display: block; margin: 0 auto;" width="560" height="315"
+        src="https://www.youtube.com/embed/L5PvQj1vfC4" title="YouTube video player" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <p>
+        Without absolutely no hesitation, the algorithm then chose to proceed bombarding me with any and all hardware
+        e-ink display projects.
+        I'm not complaining as it was an interesting rabbithole to dive into and turned out into a useful project for me
+        to use my Raspberry Pi chilling in a drawer.
+      </p>
+      <p>
+        When I initially bought my Raspberry Pis (a 4 and a 0W), I had intended on using it for a homelab (as everyone
+        seemed to recommend to get into devops/security) which I then never ended up using because I didn't build out of
+        a need but rather to experiment with.
+        I'd figured if I was going to make something with the e-ink display then I would need to make it useful and have
+        little/no maintenance once it's going in order for me to use it.
+        Then I remembered another <a href="https://www.youtube.com/watch?v=hsImUtqSCZg">video</a> </p>
+
+      <iframe style="display: block; margin: 0 auto;" width="560" height="315"
+        src="https://www.youtube.com/embed/hsImUtqSCZg" title="YouTube video player" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+
+      <p>
+
+        I watched a while back and figured I would make a dashboard, similar to <a
+          href="https://tubestatus.net/">https://tubestatus.net/</a> to print the statuses of my most frequent lines and
+        train arrival data as it would actually be useful for me.
+      </p>
+
+      <p>
+        I had first built it first using my RPi4B and had absolutely no major issues building whatsoever with it. Most
+        of my time debugging was embarrassingly spent designing the front end with HTML + JS + CSS making it look pretty
+        (vibe coding to the rescue!) but eventually I got it looking how I wanted it to. Then I started researching into
+        power consumption and it uses roughly somewhere between 2.5W-5W. Now, the only power hungry part of this project
+        is when the screen is refreshed at a regular interval so the overall average consumption is probably on the low
+        end.
+      </p>
+      <p>
+        However, if you compare it to the RPi0W, it's significantly less, somewhere around &lt;1W. A reduction in more
+        than half of what the RPi4B uses. This seemed the way to go.
+      </p>
+
+      <p>
+        Little did I know how much pain it would cause me to debug everything to get it running on the RPi0W.
+      </p>
+      <p>
+        The first issue I ran into was how slow everything would run on it.
+
+        What took me a 1-2 minutes to install the dependencies for the project on the RPi4B, ended up taking overnight
+        on the RPI0W. Quite often the RPi0W would freeze during downloading the Python dependencies and so I would
+        reboot the device, install the dependencies again and pray it would work.
+
+        Eventually, I managed to tweak the swap file to increase the RAM. I also would download the wheels of the Python
+        dependencies and then install it locally to see which libraries were causing the freezing (looking at you PIL).
+        I had to reinstall that library an annoying amount of times due to import issues.
+
+        Once I had those issues resolved, I ran into the next issue of the screenshot functionality. The process of
+        uploading data to the display is through the following:
+
+      </p>
+      <code style="display: block; margin: 0 auto;">
+            Jinja template -> render HTML -> Chromium headless screenshot -> Upload image
+      </code>
+
+      <p>
+        When I would try to upload an image from a HTML template, the logs would throw an error similar to:
+      <pre>
+  <code>File "/home/pi/project/InkyPi/src/plugins/weather/weather.py", line 76, in generate_image 
+    Apr 01 09:09:26 pi inkypi[1758]: raise RuntimeError("Failed to take screenshot, please check logs.") 
+    Apr 01 09:09:26 pi inkypi[1758]: RuntimeError: Failed to take screenshot, please check logs. </code>
+</pre>
+
+      </p>
+
+      <p>
+        As the code for repo for this is relatively new, it isn't straight forward to pinpoint specifically what was
+        going wrong. Many print statements later I painstakingly, I managed to identify where the error was coming from.
+        It was the Chromium binary was throwing segmentation faults everytime it was invoked 😠.
+        Many uninstallations and installations of a plethora chromium versions and nothing worked. With a bit more
+        digging around and it turns out modern Chromium versions aren't supported on 32-bit architectures - which is
+        what the
+        RPI0W has. :(
+      </p>
+
+      <p>
+        A lot of research was gone into finding alternative methods to convert HTML files to an image that worked.
+        Firefox
+        didn't seem to handle specifying window sizes correctly, HTML to PS conversions didn't convert correctly.
+        Eventually I found <code>wkhtmltoimage</code>, which just what I needed it to.
+      </p>
+
+      <p>
+        With a bit more tweaking of the source code (and CSS as my initial template had some flaws in it), I eventually
+        managed to get it working. See the source code here: <a href="https://github.com/VRvinny/InkyPi">https://github.com/VRvinny/InkyPi</a>
+
+      </p>
+      <p> Front: </p>
+      <img style="width: 560px; display: block; margin: 0 auto;" src="./imgs/inky/inkyfront.jpg">
+      <p> Back: </p>
+      <img style="width: 560px; display: block; margin: 0 auto;" src="./imgs/inky/inkyback.jpg">
+
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+</body>
+
+</html>
